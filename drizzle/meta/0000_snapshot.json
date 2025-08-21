@@ -1,0 +1,1064 @@
+{
+  "id": "6c96fb8a-b1d3-4ef9-aee2-fc174d1c9a94",
+  "prevId": "00000000-0000-0000-0000-000000000000",
+  "version": "7",
+  "dialect": "postgresql",
+  "tables": {
+    "public.match_logs": {
+      "name": "match_logs",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "gen_random_uuid()"
+        },
+        "match_id": {
+          "name": "match_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "user_id": {
+          "name": "user_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "feedback": {
+          "name": "feedback",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "is_accepted": {
+          "name": "is_accepted",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": false,
+          "default": false
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": false,
+          "default": "now()"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "match_logs_match_id_matches_id_fk": {
+          "name": "match_logs_match_id_matches_id_fk",
+          "tableFrom": "match_logs",
+          "tableTo": "matches",
+          "columnsFrom": [
+            "match_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        },
+        "match_logs_user_id_users_id_fk": {
+          "name": "match_logs_user_id_users_id_fk",
+          "tableFrom": "match_logs",
+          "tableTo": "users",
+          "columnsFrom": [
+            "user_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.matches": {
+      "name": "matches",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "gen_random_uuid()"
+        },
+        "user_a_id": {
+          "name": "user_a_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "user_b_id": {
+          "name": "user_b_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "compatibility_score": {
+          "name": "compatibility_score",
+          "type": "real",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "domain_score": {
+          "name": "domain_score",
+          "type": "real",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "archetype_score": {
+          "name": "archetype_score",
+          "type": "real",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "modality_score": {
+          "name": "modality_score",
+          "type": "real",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "match_narrative": {
+          "name": "match_narrative",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "status": {
+          "name": "status",
+          "type": "match_status",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'PENDING'"
+        },
+        "is_new": {
+          "name": "is_new",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": false,
+          "default": true
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": false,
+          "default": "now()"
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": false,
+          "default": "now()"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "matches_user_a_id_users_id_fk": {
+          "name": "matches_user_a_id_users_id_fk",
+          "tableFrom": "matches",
+          "tableTo": "users",
+          "columnsFrom": [
+            "user_a_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        },
+        "matches_user_b_id_users_id_fk": {
+          "name": "matches_user_b_id_users_id_fk",
+          "tableFrom": "matches",
+          "tableTo": "users",
+          "columnsFrom": [
+            "user_b_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.purpose_profiles": {
+      "name": "purpose_profiles",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "gen_random_uuid()"
+        },
+        "user_id": {
+          "name": "user_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "domain": {
+          "name": "domain",
+          "type": "domain",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "archetype": {
+          "name": "archetype",
+          "type": "archetype",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "modality": {
+          "name": "modality",
+          "type": "modality",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "narrative": {
+          "name": "narrative",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "purpose_profiles_user_id_users_id_fk": {
+          "name": "purpose_profiles_user_id_users_id_fk",
+          "tableFrom": "purpose_profiles",
+          "tableTo": "users",
+          "columnsFrom": [
+            "user_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.subscription_plans": {
+      "name": "subscription_plans",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "gen_random_uuid()"
+        },
+        "name": {
+          "name": "name",
+          "type": "varchar(50)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "price": {
+          "name": "price",
+          "type": "real",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "duration": {
+          "name": "duration",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "perks": {
+          "name": "perks",
+          "type": "text[]",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "is_active": {
+          "name": "is_active",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": false,
+          "default": true
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": false,
+          "default": "now()"
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": false,
+          "default": "now()"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {
+        "subscription_plans_name_unique": {
+          "name": "subscription_plans_name_unique",
+          "nullsNotDistinct": false,
+          "columns": [
+            "name"
+          ]
+        }
+      },
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.user_subscriptions": {
+      "name": "user_subscriptions",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "gen_random_uuid()"
+        },
+        "user_id": {
+          "name": "user_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "plan_id": {
+          "name": "plan_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "start_date": {
+          "name": "start_date",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "end_date": {
+          "name": "end_date",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "status": {
+          "name": "status",
+          "type": "subscription_status",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'ACTIVE'"
+        },
+        "payment_id": {
+          "name": "payment_id",
+          "type": "varchar(255)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "payment_method": {
+          "name": "payment_method",
+          "type": "varchar(50)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": false,
+          "default": "now()"
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": false,
+          "default": "now()"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "user_subscriptions_user_id_users_id_fk": {
+          "name": "user_subscriptions_user_id_users_id_fk",
+          "tableFrom": "user_subscriptions",
+          "tableTo": "users",
+          "columnsFrom": [
+            "user_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        },
+        "user_subscriptions_plan_id_subscription_plans_id_fk": {
+          "name": "user_subscriptions_plan_id_subscription_plans_id_fk",
+          "tableFrom": "user_subscriptions",
+          "tableTo": "subscription_plans",
+          "columnsFrom": [
+            "plan_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.users": {
+      "name": "users",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "gen_random_uuid()"
+        },
+        "name": {
+          "name": "name",
+          "type": "varchar(255)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "email": {
+          "name": "email",
+          "type": "varchar(255)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "password": {
+          "name": "password",
+          "type": "varchar(255)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "phone": {
+          "name": "phone",
+          "type": "varchar(20)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "role": {
+          "name": "role",
+          "type": "role",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'USER'"
+        },
+        "gender": {
+          "name": "gender",
+          "type": "gender",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "dob": {
+          "name": "dob",
+          "type": "date",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "avatar": {
+          "name": "avatar",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "religion": {
+          "name": "religion",
+          "type": "religion",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "education": {
+          "name": "education",
+          "type": "education_level",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "profession": {
+          "name": "profession",
+          "type": "profession_field",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "personality": {
+          "name": "personality",
+          "type": "personality_type",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "country": {
+          "name": "country",
+          "type": "varchar(100)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "country_code": {
+          "name": "country_code",
+          "type": "varchar(2)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "state": {
+          "name": "state",
+          "type": "varchar(100)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "state_code": {
+          "name": "state_code",
+          "type": "varchar(10)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "city": {
+          "name": "city",
+          "type": "varchar(100)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "marital_status": {
+          "name": "marital_status",
+          "type": "marital_status",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "looking_for": {
+          "name": "looking_for",
+          "type": "marital_status",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "height": {
+          "name": "height",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "weight": {
+          "name": "weight",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "language": {
+          "name": "language",
+          "type": "language",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "interests": {
+          "name": "interests",
+          "type": "text[]",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "alcohol": {
+          "name": "alcohol",
+          "type": "substance_usage",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "drugs": {
+          "name": "drugs",
+          "type": "substance_usage",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "smoking": {
+          "name": "smoking",
+          "type": "substance_usage",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "politics": {
+          "name": "politics",
+          "type": "text[]",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "is_verified": {
+          "name": "is_verified",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": false,
+          "default": false
+        },
+        "is_deleted": {
+          "name": "is_deleted",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": false,
+          "default": false
+        },
+        "is_active": {
+          "name": "is_active",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": false,
+          "default": true
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": false,
+          "default": "now()"
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": false,
+          "default": "now()"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {
+        "users_email_unique": {
+          "name": "users_email_unique",
+          "nullsNotDistinct": false,
+          "columns": [
+            "email"
+          ]
+        }
+      },
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    }
+  },
+  "enums": {
+    "public.archetype": {
+      "name": "archetype",
+      "schema": "public",
+      "values": [
+        "LEADER",
+        "FOLLOWER",
+        "SUPPORTER",
+        "PARTNER",
+        "ROMANTIC",
+        "CONFIDANT",
+        "COMPANION",
+        "MENTOR",
+        "INNOVATOR",
+        "EXPERT",
+        "ADVISOR",
+        "ENTREPRENEUR",
+        "PROFESSIONAL",
+        "TEAM_PLAYER",
+        "VISIONARY",
+        "GURU",
+        "SCHOLAR",
+        "PHILANTHROPIST",
+        "ACTIVIST",
+        "COMMUNITY_LEADER",
+        "ADVOCATE",
+        "ARTIST",
+        "CREATOR",
+        "PERFORMER",
+        "WRITER",
+        "DESIGNER",
+        "SPIRITUAL_GUIDE",
+        "PHILOSOPHER",
+        "THEOLOGIAN",
+        "HEALER",
+        "EXPLORER",
+        "SEEKER",
+        "STUDENT",
+        "ADVENTURER",
+        "NURTURER",
+        "CARETAKER",
+        "OPTIMIST",
+        "REALIST",
+        "SELF_DISCOVERER",
+        "MYSTIC",
+        "LEARNER",
+        "ADVISOR"
+      ]
+    },
+    "public.domain": {
+      "name": "domain",
+      "schema": "public",
+      "values": [
+        "PERSONAL_GROWTH",
+        "SELF_DISCOVERY",
+        "EMOTIONAL_WELLBEING",
+        "MINDFULNESS",
+        "SPIRITUAL_ENLIGHTENMENT",
+        "MARRIAGE",
+        "FAMILY",
+        "PARENTING",
+        "COMPANIONSHIP",
+        "FRIENDSHIP",
+        "ROMANTIC_RELATIONSHIPS",
+        "PHYSICAL_HEALTH",
+        "MENTAL_HEALTH",
+        "FITNESS",
+        "NUTRITION",
+        "WELLNESS",
+        "YOGA",
+        "MEDITATION",
+        "RELIGIOUS_DEVOTION",
+        "SPIRITUAL_GROWTH",
+        "FAITH_EXPLORATION",
+        "MEDITATIVE_PRACTICES",
+        "RELIGIOUS_COMMUNITY",
+        "ACADEMIC_ACHIEVEMENT",
+        "LIFELONG_LEARNING",
+        "LANGUAGE_LEARNING",
+        "PERSONAL_EDUCATION",
+        "SOCIAL_JUSTICE",
+        "POLITICAL_ACTIVISM",
+        "ENVIRONMENTAL_SUSTAINABILITY",
+        "CHARITY_WORK",
+        "VOLUNTEERING",
+        "HUMAN_RIGHTS",
+        "COMMUNITY_BUILDING",
+        "PROFESSIONAL_NETWORKING",
+        "CAREER_ADVANCEMENT",
+        "SKILL_DEVELOPMENT",
+        "MENTORSHIP",
+        "LEADERSHIP_DEVELOPMENT",
+        "FINANCIAL_INDEPENDENCE",
+        "WEALTH_CREATION",
+        "INVESTING",
+        "PERSONAL_FINANCE",
+        "ECONOMIC_EMPOWERMENT",
+        "ARTISTIC_EXPRESSION",
+        "MUSIC_CREATION",
+        "WRITING",
+        "PHOTOGRAPHY",
+        "PAINTING",
+        "SCULPTURE",
+        "DESIGN",
+        "TRAVEL",
+        "CULTURAL_EXPLORATION",
+        "EXPATRIATE_LIVING",
+        "ADVENTURE_TRAVEL",
+        "TECHNOLOGY_INNOVATION",
+        "AI_RESEARCH",
+        "DIGITAL_CREATION",
+        "SOFTWARE_DEVELOPMENT",
+        "TECH_STARTUPS",
+        "PHILOSOPHICAL_EXPLORATION",
+        "ETHICS",
+        "MORALITY",
+        "LOGIC_AND_RATIONALE",
+        "SUSTAINABLE_LIVING",
+        "MINIMALISM",
+        "FASHION",
+        "HOME_IMPROVEMENT",
+        "GARDENING",
+        "LEGAL_REFORM",
+        "JUDICIAL_REFORM",
+        "CIVIL_LIBERTIES",
+        "HUMAN_RIGHTS_LAW",
+        "PERSONAL_EXPLORATION",
+        "CURIOSITY",
+        "INNOVATION",
+        "CREATIVE_THINKING",
+        "EXPERIMENTATION"
+      ]
+    },
+    "public.education_level": {
+      "name": "education_level",
+      "schema": "public",
+      "values": [
+        "NO_FORMAL_EDUCATION",
+        "PRIMARY",
+        "SECONDARY",
+        "HIGH_SCHOOL",
+        "DIPLOMA",
+        "ASSOCIATE",
+        "BACHELORS",
+        "MASTERS",
+        "MBA",
+        "PHD",
+        "POSTDOC",
+        "VOCATIONAL",
+        "SELF_TAUGHT",
+        "BOOTCAMP",
+        "OTHER"
+      ]
+    },
+    "public.gender": {
+      "name": "gender",
+      "schema": "public",
+      "values": [
+        "MALE",
+        "FEMALE",
+        "OTHER"
+      ]
+    },
+    "public.language": {
+      "name": "language",
+      "schema": "public",
+      "values": [
+        "ENGLISH",
+        "URDU",
+        "HINDI",
+        "PUNJABI",
+        "BANGLA",
+        "TAMIL",
+        "TELUGU",
+        "KANNADA",
+        "MARATHI",
+        "GUJARATI",
+        "ODIA",
+        "TURKISH",
+        "ARABIC",
+        "RUSSIAN",
+        "POLISH",
+        "CROATIAN",
+        "BULGARIAN",
+        "ROMANIAN",
+        "BOSNIAN",
+        "SERBIAN",
+        "PERSIAN",
+        "PASHTO",
+        "KURDISH",
+        "AZERBAIJANI",
+        "MALAY",
+        "INDONESIAN",
+        "SWAHILI",
+        "BENGALI",
+        "KASHMIRI",
+        "URDU_HINDI",
+        "MALAYALAM",
+        "ALBANIAN",
+        "UZBEK",
+        "TURKMEN",
+        "KAZAKH",
+        "CHECHEN",
+        "Hausa",
+        "BENGALI",
+        "SOMALI",
+        "MOROCCAN",
+        "TUNISIAN",
+        "OTHER"
+      ]
+    },
+    "public.marital_status": {
+      "name": "marital_status",
+      "schema": "public",
+      "values": [
+        "SINGLE",
+        "MARRIED",
+        "DIVORCED",
+        "WIDOWED"
+      ]
+    },
+    "public.match_status": {
+      "name": "match_status",
+      "schema": "public",
+      "values": [
+        "PENDING",
+        "LIKED",
+        "REJECTED",
+        "ACCEPTED"
+      ]
+    },
+    "public.modality": {
+      "name": "modality",
+      "schema": "public",
+      "values": [
+        "ONLINE",
+        "OFFLINE",
+        "VIRTUAL",
+        "COLLABORATIVE",
+        "TEXT_BASED",
+        "ONE_ON_ONE",
+        "WORKSHOPS",
+        "CONFERENCES",
+        "MEETUPS",
+        "SOCIAL_MEDIA",
+        "FORUMS",
+        "BLOGS"
+      ]
+    },
+    "public.personality_type": {
+      "name": "personality_type",
+      "schema": "public",
+      "values": [
+        "INTROVERT",
+        "EXTROVERT",
+        "AMBIVERENT",
+        "OTHER"
+      ]
+    },
+    "public.political_view": {
+      "name": "political_view",
+      "schema": "public",
+      "values": [
+        "LIBERAL",
+        "CONSERVATIVE",
+        "CENTRIST",
+        "LIBERTARIAN",
+        "SOCIALIST",
+        "PROGRESSIVE",
+        "NATIONALIST",
+        "APOLITICAL",
+        "FUNDAMENTALIST",
+        "OTHER"
+      ]
+    },
+    "public.profession_field": {
+      "name": "profession_field",
+      "schema": "public",
+      "values": [
+        "ENGINEERING",
+        "SOFTWARE_DEVELOPMENT",
+        "DATA_SCIENCE",
+        "ARTIFICIAL_INTELLIGENCE",
+        "MEDICINE",
+        "DENTISTRY",
+        "NURSING",
+        "EDUCATION",
+        "BUSINESS",
+        "ENTREPRENEUR",
+        "FINANCE",
+        "MARKETING",
+        "SALES",
+        "LAW",
+        "GOVERNMENT",
+        "PUBLIC_SERVICE",
+        "DESIGN",
+        "WRITING",
+        "JOURNALISM",
+        "ARTS",
+        "FILM",
+        "MUSIC",
+        "SPORTS",
+        "AGRICULTURE",
+        "ARCHITECTURE",
+        "PSYCHOLOGY",
+        "SOCIAL_WORK",
+        "FREELANCER",
+        "STUDENT",
+        "UNEMPLOYED",
+        "HOMEMAKER",
+        "OTHER"
+      ]
+    },
+    "public.religion": {
+      "name": "religion",
+      "schema": "public",
+      "values": [
+        "ISLAM",
+        "CHRISTIANITY",
+        "HINDUISM",
+        "BUDDHISM",
+        "JUDAISM",
+        "SIKHISM",
+        "JAINISM",
+        "BAHAI",
+        "ZOROASTRIANISM",
+        "SHINTO",
+        "TAOISM",
+        "AGNOSTIC",
+        "ATHEIST",
+        "SPIRITUAL_BUT_NOT_RELIGIOUS",
+        "PAGAN",
+        "INDIGENOUS",
+        "OTHER"
+      ]
+    },
+    "public.role": {
+      "name": "role",
+      "schema": "public",
+      "values": [
+        "USER",
+        "ADMIN"
+      ]
+    },
+    "public.subscription_status": {
+      "name": "subscription_status",
+      "schema": "public",
+      "values": [
+        "ACTIVE",
+        "EXPIRED",
+        "CANCELLED"
+      ]
+    },
+    "public.substance_usage": {
+      "name": "substance_usage",
+      "schema": "public",
+      "values": [
+        "NONE",
+        "OCCASIONAL",
+        "REGULAR",
+        "SOCIAL",
+        "TRYING_TO_QUIT",
+        "OPEN"
+      ]
+    }
+  },
+  "schemas": {},
+  "sequences": {},
+  "roles": {},
+  "policies": {},
+  "views": {},
+  "_meta": {
+    "columns": {},
+    "schemas": {},
+    "tables": {}
+  }
+}
