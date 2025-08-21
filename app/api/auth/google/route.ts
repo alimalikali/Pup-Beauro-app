@@ -1,89 +1,126 @@
-import { NextResponse } from 'next/server';
-import { db } from '@/lib/db';
-import { ENV } from '@/lib/constants';
-import { signJWT } from '@/lib/utils/auth-helper';
-import { users } from '@/lib/db/schema';
-import { eq } from 'drizzle-orm';
-import { v4 as uuidv4 } from 'uuid';
-import { SignJWT } from 'jose';
+import { NextRequest, NextResponse } from 'next/server'
+import { SignJWT } from 'jose'
+import { db } from '@/lib/db'
+import * as schema from '@/lib/db/schema'
+import { eq } from 'drizzle-orm'
 
-export async function POST(request: Request) {
+// Helper function to parse duration string to seconds
+function parseDuration(duration: string): number {
+  const units = {
+    s: 1,
+    m: 60,
+    h: 60 * 60,
+    d: 24 * 60 * 60,
+  };
+
+  const match = duration.match(/^(\d+)([smhd])$/);
+  if (!match) return 0;
+
+  const [, value, unit] = match;
+  return parseInt(value) * units[unit as keyof typeof units];
+}
+
+// Helper function to get cookie options
+function getCookieOptions(maxAge: number) {
+  return {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === 'production',
+    sameSite: 'lax' as const,
+    path: '/',
+    maxAge,
+  };
+}
+
+export async function POST(request: NextRequest) {
   try {
-    const { googleAccessToken } = await request.json();
+    const { access_token } = await request.json()
 
-    // Verify the Google access token and get user info
-    const response = await fetch('https://www.googleapis.com/oauth2/v3/userinfo', {
-      headers: {
-        Authorization: `Bearer ${googleAccessToken}`,
-      },
-    });
-
-    if (!response.ok) {
-      throw new Error('Failed to verify Google token');
+    if (!access_token) {
+      return NextResponse.json({ error: 'Access token is required' }, { status: 400 })
     }
 
-    const googleUser = await response.json();
+    // Get user info from Google
+    const userInfoResponse = await fetch(
+      `https://www.googleapis.com/oauth2/v2/userinfo?access_token=${access_token}`
+    )
 
-    // Check if user exists
-    const existingUsers = await db.select().from(users).where(eq(users.email, googleUser.email));
-    let user = existingUsers[0];
-
-    // If user doesn't exist, create a new one
-    if (!user) {
-      const [newUser] = await db.insert(users).values({
-        name: googleUser.name,
-        email: googleUser.email,
-        password: '', // No password for Google auth
-        isVerified: true, // Google emails are verified
-        gender: googleUser.gender,
-        dob: googleUser.dob,
-        phone: googleUser.phone,
-        role: 'USER',
-      }).returning();
-      
-      user = newUser;
+    if (!userInfoResponse.ok) {
+      return NextResponse.json({ error: 'Failed to get user info from Google' }, { status: 400 })
     }
 
+    const userInfo = await userInfoResponse.json()
 
-    // Generate tokens
-    const secret = new TextEncoder().encode(ENV.JWT_SECRET);
+    // Check if user already exists
+    let user = await db
+      .select()
+      .from(schema.users)
+      .where(eq(schema.users.email, userInfo.email))
+      .limit(1)
+
+    if (user.length === 0) {
+      // Create new user
+      const [newUser] = await db
+        .insert(schema.users)
+        .values({
+          email: userInfo.email,
+          name: userInfo.name,
+          password: '', // No password for Google users
+          role: 'USER',
+          isActive: true,
+          isVerified: true, // Google users are verified
+          isDeleted: false,
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        })
+        .returning()
+
+      user = [newUser]
+    }
+
+    const currentUser = user[0]
+
+    // Create JWT tokens
+    const secret = new TextEncoder().encode(process.env.JWT_SECRET || 'pup');
     const token = await new SignJWT({
-      sub: user.id,
-      email: user.email,
-      role: user.role,
+      sub: currentUser.id,
+      email: currentUser.email,
+      role: currentUser.role,
     })
       .setProtectedHeader({ alg: 'HS256' })
-      .setExpirationTime(ENV.JWT_EXPIRY)
-      .sign(secret);
+      .setIssuedAt()
+      .setExpirationTime(process.env.JWT_EXPIRY || '7d')
+      .sign(secret)
 
     const refreshToken = await new SignJWT({
-      sub: user.id,
-      type: 'refresh',
+      sub: currentUser.id,
+      email: currentUser.email,
+      role: currentUser.role,
     })
       .setProtectedHeader({ alg: 'HS256' })
-      .setExpirationTime(ENV.JWT_EXPIRY)
-      .sign(secret);
-
-    // Create the response
-    const response2 = NextResponse.json({
-      user: {
-        id: user.id,
-        name: user.name,
-        email: user.email,
-        role: user.role,
-      },
-    });
+      .setIssuedAt()
+      .setExpirationTime(process.env.REFRESH_TOKEN_EXPIRY || '7d')
+      .sign(secret)
 
     // Set cookies
-    response2.cookies.set(ENV.TOKEN_NAME, token, ENV.getCookieOptions(ENV.ACCESS_TOKEN_EXPIRY));
-    response2.cookies.set(ENV.REFRESH_TOKEN_NAME, refreshToken, ENV.getCookieOptions(ENV.REFRESH_TOKEN_EXPIRY));
+    const response2 = NextResponse.json({
+      message: 'Google authentication successful',
+      user: {
+        id: currentUser.id,
+        email: currentUser.email,
+        name: currentUser.name,
+        role: currentUser.role,
+      },
+    })
 
-    return response2;
-  } catch (error: any) {
-    console.error('Google auth error:', error);
-    return NextResponse.json(
-      { message: 'Authentication failed' },
-      { status: 401 }
-    );
+    const accessTokenExpiry = parseDuration(process.env.ACCESS_TOKEN_EXPIRY || '1h')
+    const refreshTokenExpiry = parseDuration(process.env.REFRESH_TOKEN_EXPIRY || '7d')
+
+    response2.cookies.set(process.env.TOKEN_NAME || 'token', token, getCookieOptions(accessTokenExpiry));
+    response2.cookies.set(process.env.REFRESH_TOKEN_NAME || 'refreshToken', refreshToken, getCookieOptions(refreshTokenExpiry));
+
+    return response2
+  } catch (error) {
+    console.error('Google auth error:', error)
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
   }
 } 

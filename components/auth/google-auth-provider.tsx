@@ -1,19 +1,30 @@
-'use client';
+'use client'
 
-import { GoogleOAuthProvider } from '@react-oauth/google';
-import { ENV } from '@/lib/constants';
+import { GoogleOAuthProvider } from '@react-oauth/google'
+import { ReactNode } from 'react'
 
-export function GoogleAuthProvider({ children }: { children: React.ReactNode }) {
-  // Check if Google OAuth is properly configured
-  if (!ENV.GOOGLE_CLIENT_ID) {
-    console.warn('Google OAuth Client ID is not configured. Google authentication will be disabled.');
-    // Return children without Google OAuth provider if credentials are missing
+interface GoogleAuthProviderProps {
+  children: ReactNode
+}
+
+export function GoogleAuthProvider({ children }: GoogleAuthProviderProps) {
+  if (!process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID) {
+    // In development, show a helpful error message
+    if (process.env.NODE_ENV === 'development') {
+      console.error('Missing GOOGLE_CLIENT_ID environment variable. Please set it in your .env.local file.');
+      return (
+        <div className="p-4 text-red-600 bg-red-50 border border-red-200 rounded">
+          Missing GOOGLE_CLIENT_ID environment variable. Please check your .env.local file.
+        </div>
+      );
+    }
+    // In production, just render children without Google auth
     return <>{children}</>;
   }
 
   return (
-    <GoogleOAuthProvider clientId={ENV.GOOGLE_CLIENT_ID}>
+    <GoogleOAuthProvider clientId={process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID}>
       {children}
     </GoogleOAuthProvider>
-  );
+  )
 } 

@@ -1,77 +1,107 @@
-import { NextResponse } from "next/server"
-import { cookies } from "next/headers"
-import { db } from "@/lib/db"
-import { users } from "@/lib/db/schema"
-import { eq } from "drizzle-orm"
-import { calculateMatches } from "@/lib/matching-algorithm"
-import { verify } from "jsonwebtoken"
-import { ENV } from "@/lib/constants"
+import { NextRequest, NextResponse } from 'next/server'
+import { cookies } from 'next/headers'
+import { jwtVerify } from 'jose'
+import { db } from '@/lib/db'
+import * as schema from '@/lib/db/schema'
+import { eq, and, ne } from 'drizzle-orm'
 
-export async function GET() {
+export async function GET(request: NextRequest) {
   try {
-    // Get token from cookies
     const cookieStore = await cookies()
-    const token = cookieStore.get(ENV.TOKEN_NAME)
+    const token = cookieStore.get(process.env.TOKEN_NAME || 'token')
 
     if (!token) {
-      return new NextResponse("Unauthorized", { status: 401 })
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    // Verify token and get user ID
-    const decoded = verify(token.value, ENV.JWT_SECRET) as { id: string }
-    const [user] = await db.select().from(users).where(eq(users.id, decoded.id))
+    const decoded = await jwtVerify(token.value, new TextEncoder().encode(process.env.JWT_SECRET || 'pup')) as { payload: { id: string } }
+    const userId = decoded.payload.id
 
-    if (!user) {
-      return new NextResponse("User not found", { status: 404 })
+    // Get user's purpose profile
+    const userProfile = await db
+      .select()
+      .from(schema.purposeProfiles)
+      .where(eq(schema.purposeProfiles.userId, userId))
+      .limit(1)
+
+    if (!userProfile.length) {
+      return NextResponse.json({ error: 'Purpose profile not found' }, { status: 404 })
     }
 
-    // Calculate matches for the user
-    const matches = await calculateMatches(user.id)
-    return NextResponse.json(matches)
+    const profile = userProfile[0]
+
+    // Get potential matches based on domain
+    const matches = await db
+      .select()
+      .from(schema.purposeProfiles)
+      .where(
+        and(
+          eq(schema.purposeProfiles.domain, profile.domain),
+          ne(schema.purposeProfiles.userId, userId)
+        )
+      )
+
+    return NextResponse.json({ matches })
   } catch (error) {
-    console.error("Error in matches API:", error)
-    if (error instanceof Error) {
-      return new NextResponse(error.message, { status: 500 })
-    }
-    return new NextResponse("Internal Server Error", { status: 500 })
+    console.error('Error fetching matches:', error)
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
   }
 }
 
-export async function POST(request: Request) {
+export async function POST(request: NextRequest) {
   try {
-    // Get token from cookies
     const cookieStore = await cookies()
-    const token = cookieStore.get(ENV.TOKEN_NAME)
+    const token = cookieStore.get(process.env.TOKEN_NAME || 'token')
 
     if (!token) {
-      return new NextResponse("Unauthorized", { status: 401 })
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    // Verify token and get user ID
-    const decoded = verify(token.value, ENV.JWT_SECRET) as { id: string }
-    const [user] = await db.select().from(users).where(eq(users.id, decoded.id))
+    const decoded = await jwtVerify(token.value, new TextEncoder().encode(process.env.JWT_SECRET || 'pup')) as { payload: { id: string } }
+    const userId = decoded.payload.id
 
-    if (!user) {
-      return new NextResponse("User not found", { status: 404 })
+    const { targetUserId, action } = await request.json()
+
+    if (!targetUserId || !action) {
+      return NextResponse.json({ error: 'Missing required fields' }, { status: 400 })
     }
 
-    // Get request body
-    const body = await request.json()
-    const { limit = 10 } = body
+    // Check if match already exists
+    const existingMatch = await db
+      .select()
+      .from(schema.matches)
+      .where(
+        and(
+          eq(schema.matches.userAId, userId),
+          eq(schema.matches.userBId, targetUserId)
+        )
+      )
+      .limit(1)
 
-    // Calculate new matches
-    const matches = await calculateMatches(user.id)
-    const limitedMatches = matches.slice(0, limit)
+    if (existingMatch.length > 0) {
+      return NextResponse.json({ error: 'Match already exists' }, { status: 409 })
+    }
 
-    return NextResponse.json({
-      success: true,
-      matches: limitedMatches,
-    })
+    // Create new match
+    const [newMatch] = await db
+      .insert(schema.matches)
+      .values({
+        userAId: userId,
+        userBId: targetUserId,
+        compatibilityScore: 0.8, // Default score
+        domainScore: 0.8,
+        archetypeScore: 0.7,
+        modalityScore: 0.8,
+        matchNarrative: 'Match created through user action',
+        status: action === 'like' ? 'LIKED' : 'REJECTED',
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      })
+      .returning()
+
+    return NextResponse.json({ match: newMatch }, { status: 201 })
   } catch (error) {
-    console.error("Error in matches API:", error)
-    if (error instanceof Error) {
-      return new NextResponse(error.message, { status: 500 })
-    }
-    return new NextResponse("Internal Server Error", { status: 500 })
+    console.error('Error creating match:', error)
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
   }
 }

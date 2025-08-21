@@ -1,41 +1,50 @@
-"use client"
+"use client";
 
-import type React from "react"
-
-import { useState } from "react"
-import Link from "next/link"
-import { Heart } from "lucide-react"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
-import { Separator } from "@/components/ui/separator"
-import { useToast } from "@/hooks/use-toast"
-import z from "zod"
-import { useAuthStore } from "@/lib/store/auth-store"
-import { useForm, FormProvider } from "react-hook-form"
-import { zodResolver } from "@hookform/resolvers/zod"
-import { FormMessage, FormControl, FormLabel, FormItem, FormField } from "../ui/form"
-import { GoogleAuthButton } from "./google-auth-button"
-
+import { Button } from "@/components/ui/button";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Separator } from "@/components/ui/separator";
+import { useToast } from "@/hooks/use-toast";
+import { useAuthStore } from "@/lib/store/auth-store";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { Heart } from "lucide-react";
+import Link from "next/link";
+import { useState } from "react";
+import { FormProvider, useForm } from "react-hook-form";
+import z from "zod";
+import {
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "../ui/form";
+import { GoogleAuthButton } from "./google-auth-button";
 
 const formSchema = z.object({
-  email: z.string().email('Invalid email address'),
-  password: z.string().min(8, 'Password must be at least 8 characters'),
+  email: z.string().email("Invalid email address"),
+  password: z.string().min(8, "Password must be at least 8 characters"),
 });
 
 type FormData = z.infer<typeof formSchema>;
 
 export function LoginForm() {
-  const [isLoading, setIsLoading] = useState(false)
-  const login = useAuthStore((state) => state.login)
-  const { toast } = useToast()
+  const [isLoading, setIsLoading] = useState(false);
+  const login = useAuthStore((state) => state.login);
+  const { toast } = useToast();
 
   const form = useForm<FormData>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      email: '',
-      password: '',
+      email: "",
+      password: "",
     },
   });
 
@@ -46,13 +55,13 @@ export function LoginForm() {
       toast({
         title: "Login successful",
         description: "Welcome back to Pup!",
-      })
+      });
     } catch (error: any) {
       toast({
         title: "Login failed",
         description: "Please check your credentials and try again.",
         variant: "destructive",
-      })
+      });
     } finally {
       setIsLoading(false);
     }
@@ -66,7 +75,9 @@ export function LoginForm() {
           <span className="font-bold text-xl">Pup</span>
         </div>
         <CardTitle className="text-2xl font-bold">Welcome back</CardTitle>
-        <CardDescription>Enter your email and password to login to your account</CardDescription>
+        <CardDescription>
+          Enter your email and password to login to your account
+        </CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
         <FormProvider {...form}>
@@ -116,7 +127,9 @@ export function LoginForm() {
             <Separator className="w-full" />
           </div>
           <div className="relative flex justify-center text-xs uppercase">
-            <span className="bg-background px-2 text-muted-foreground">Or continue with</span>
+            <span className="bg-background px-2 text-muted-foreground">
+              Or continue with
+            </span>
           </div>
         </div>
 
@@ -131,5 +144,5 @@ export function LoginForm() {
         </p>
       </CardFooter>
     </Card>
-  )
+  );
 }

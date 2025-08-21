@@ -2,53 +2,46 @@
 
 import { useGoogleLogin } from '@react-oauth/google';
 import { Button } from '@/components/ui/button';
-import { useAuthStore } from '@/lib/store/auth-store';
-import { useToast } from '@/hooks/use-toast';
 import { useRouter } from 'next/navigation';
 
 export function GoogleAuthButton() {
-  const { toast } = useToast();
   const router = useRouter();
-  const register = useAuthStore((state) => state.register);
 
-  const googleLogin = useGoogleLogin({
+  if (!process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID) {
+    return null;
+  }
+
+  const login = useGoogleLogin({
     onSuccess: async (response) => {
       try {
-        // Send the access token to your backend
-        await register({
-          googleAccessToken: response.access_token,
-          provider: 'google'
-        });
-        
-        toast({
-          title: "Google sign in successful",
-          description: "You have been signed in with Google",
+        const result = await fetch('/api/auth/google', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            access_token: response.access_token,
+          }),
         });
 
-        // Force a page reload to ensure middleware picks up the new auth state
-        window.location.href = '/dashboard';
-      } catch (error: any) {
-        toast({
-          title: "Google sign in failed",
-          description: error.message || "Failed to sign in with Google",
-          variant: "destructive",
-        });
+        if (result.ok) {
+          router.push('/dashboard');
+        } else {
+          console.error('Google auth failed');
+        }
+      } catch (error) {
+        console.error('Google auth error:', error);
       }
     },
-    onError: (error) => {
-      toast({
-        title: "Google sign in failed",
-        description: "Failed to sign in with Google",
-        variant: "destructive",
-      });
+    onError: () => {
+      console.error('Google login failed');
     },
   });
 
   return (
     <Button
-      type="button"
       variant="outline"
-      onClick={() => googleLogin()}
+      onClick={() => login()}
       className="w-full"
     >
       <svg className="mr-2 h-4 w-4" aria-hidden="true" focusable="false" data-prefix="fab" data-icon="google" role="img" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 488 512">

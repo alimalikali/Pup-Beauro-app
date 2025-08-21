@@ -1,77 +1,127 @@
-import { NextResponse } from 'next/server';
-import { SignJWT } from 'jose';
-import { db } from '@/lib/db';
-import { users } from '@/lib/db/schema';
-import { eq } from 'drizzle-orm';
-import { verifyPassword } from '@/lib/utils/auth-helper';
-import { ENV } from '@/lib/constants';
+import { NextRequest, NextResponse } from 'next/server'
+import bcrypt from 'bcryptjs'
+import { SignJWT } from 'jose'
+import { db } from '@/lib/db'
+import * as schema from '@/lib/db/schema'
+import { eq } from 'drizzle-orm'
 
-export async function POST(request: Request) {
+// Helper function to parse duration string to seconds
+function parseDuration(duration: string): number {
+  const units = {
+    s: 1,
+    m: 60,
+    h: 60 * 60,
+    d: 24 * 60 * 60,
+  };
+
+  const match = duration.match(/^(\d+)([smhd])$/);
+  if (!match) return 0;
+
+  const [, value, unit] = match;
+  return parseInt(value) * units[unit as keyof typeof units];
+}
+
+// Helper function to get cookie options
+function getCookieOptions(maxAge: number) {
+  return {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === 'production',
+    sameSite: 'lax' as const,
+    path: '/',
+    maxAge,
+  };
+}
+
+export async function POST(request: NextRequest) {
   try {
-    const { email, password } = await request.json();
+    const { email, password } = await request.json()
 
-    // Find user
-    const user = await db.query.users.findFirst({
-      where: eq(users.email, email),
-    });
-
-    if (!user) {
+    if (!email || !password) {
       return NextResponse.json(
-        { message: 'Invalid credentials' },
-        { status: 401 }
-      );
+        { error: 'Email and password are required' },
+        { status: 400 }
+      )
     }
+
+    // Find user by email
+    const user = await db
+      .select()
+      .from(schema.users)
+      .where(eq(schema.users.email, email))
+      .limit(1)
+
+    if (user.length === 0) {
+      return NextResponse.json(
+        { error: 'Invalid email or password' },
+        { status: 401 }
+      )
+    }
+
+    const currentUser = user[0]
 
     // Verify password
-    const isValidPassword = await verifyPassword(password, user.password);
+    const isValidPassword = await bcrypt.compare(password, currentUser.password)
+
     if (!isValidPassword) {
       return NextResponse.json(
-        { message: 'Invalid credentials' },
+        { error: 'Invalid email or password' },
         { status: 401 }
-      );
+      )
     }
 
-    // Generate tokens
-    const secret = new TextEncoder().encode(ENV.JWT_SECRET);
+    // Check if user is active
+    if (!currentUser.isActive) {
+      return NextResponse.json(
+        { error: 'Account is deactivated' },
+        { status: 401 }
+      )
+    }
+
+    // Create JWT tokens
+    const secret = new TextEncoder().encode(process.env.JWT_SECRET || 'pup');
     const token = await new SignJWT({
-      sub: user.id,
-      email: user.email,
-      role: user.role,
+      sub: currentUser.id,
+      email: currentUser.email,
+      role: currentUser.role,
     })
       .setProtectedHeader({ alg: 'HS256' })
-      .setExpirationTime(ENV.JWT_EXPIRY)
-      .sign(secret);
+      .setIssuedAt()
+      .setExpirationTime(process.env.JWT_EXPIRY || '7d')
+      .sign(secret)
 
     const refreshToken = await new SignJWT({
-      sub: user.id,
-      type: 'refresh',
+      sub: currentUser.id,
+      email: currentUser.email,
+      role: currentUser.role,
     })
       .setProtectedHeader({ alg: 'HS256' })
-      .setExpirationTime(ENV.JWT_EXPIRY)
-      .sign(secret);
-
-    // Create response
-    const response = NextResponse.json({
-      user: {
-        id: user.id,
-        name: user.name,
-        email: user.email,
-        role: user.role,
-      },
-      token,
-      refreshToken,
-    });
+      .setIssuedAt()
+      .setExpirationTime(process.env.REFRESH_TOKEN_EXPIRY || '7d')
+      .sign(secret)
 
     // Set cookies
-    response.cookies.set(ENV.TOKEN_NAME, token, ENV.getCookieOptions(ENV.ACCESS_TOKEN_EXPIRY));
-    response.cookies.set(ENV.REFRESH_TOKEN_NAME, refreshToken, ENV.getCookieOptions(ENV.REFRESH_TOKEN_EXPIRY));
+    const response = NextResponse.json({
+      message: 'Login successful',
+      user: {
+        id: currentUser.id,
+        email: currentUser.email,
+        name: currentUser.name,
+        role: currentUser.role,
+      },
+    })
 
-    return response;
+    const accessTokenExpiry = parseDuration(process.env.ACCESS_TOKEN_EXPIRY || '1h')
+    const refreshTokenExpiry = parseDuration(process.env.REFRESH_TOKEN_EXPIRY || '7d')
+
+    response.cookies.set(process.env.TOKEN_NAME || 'token', token, getCookieOptions(accessTokenExpiry));
+    response.cookies.set(process.env.REFRESH_TOKEN_NAME || 'refreshToken', refreshToken, getCookieOptions(refreshTokenExpiry));
+
+    return response
   } catch (error) {
-    console.error('Login error:', error);
+    console.error('Login error:', error)
     return NextResponse.json(
-      { message: 'Internal server error' },
+      { error: 'Internal server error' },
       { status: 500 }
-    );
+    )
   }
 }

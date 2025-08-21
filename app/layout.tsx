@@ -1,13 +1,12 @@
-import type React from "react"
-import { ThemeProvider } from "@/components/theme-provider"
-import { ThemeGradientBackground } from "@/components/theme-gradient-background"
-import { Toaster } from "@/components/ui/toaster"
-import { Inter } from "next/font/google"
-import "./globals.css"
-import { QueryProvider } from "@/lib/providers/query-provider"
 import { GoogleAuthProvider } from "@/components/auth/google-auth-provider"
-import { ErrorBoundary } from "@/components/error-boundary"
 import { LoadingProvider } from "@/components/loading-provider"
+import { ThemeGradientBackground } from "@/components/theme-gradient-background"
+import { ThemeProvider } from "@/components/theme-provider"
+import { Toaster } from "@/components/ui/toaster"
+import { QueryProvider } from "@/lib/providers/query-provider"
+import { Inter } from "next/font/google"
+import type React from "react"
+import "./globals.css"
 
 const inter = Inter({ subsets: ["latin"] })
 
@@ -25,7 +24,7 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <body className={`${inter.className} overflow-x-hidden`} >
-        <ErrorBoundary>
+        {/* <ErrorBoundary> */}
           <LoadingProvider>
             <QueryProvider>
               <GoogleAuthProvider>
@@ -38,7 +37,7 @@ export default function RootLayout({
               </GoogleAuthProvider>
             </QueryProvider>
           </LoadingProvider>
-        </ErrorBoundary>
+        {/* </ErrorBoundary> */}
       </body>
     </html>
   )
