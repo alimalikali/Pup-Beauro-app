@@ -6,6 +6,8 @@ import { Inter } from "next/font/google"
 import "./globals.css"
 import { QueryProvider } from "@/lib/providers/query-provider"
 import { GoogleAuthProvider } from "@/components/auth/google-auth-provider"
+import { ErrorBoundary } from "@/components/error-boundary"
+import { LoadingProvider } from "@/components/loading-provider"
 
 const inter = Inter({ subsets: ["latin"] })
 
@@ -23,16 +25,20 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <body className={`${inter.className} overflow-x-hidden`} >
-        <QueryProvider>
-          <GoogleAuthProvider>
-            <ThemeProvider defaultTheme="system">
-              <ThemeGradientBackground>
-                {children}
-                <Toaster />
-              </ThemeGradientBackground>
-            </ThemeProvider>
-          </GoogleAuthProvider>
-        </QueryProvider>
+        <ErrorBoundary>
+          <LoadingProvider>
+            <QueryProvider>
+              <GoogleAuthProvider>
+                <ThemeProvider defaultTheme="system">
+                  <ThemeGradientBackground>
+                    {children}
+                    <Toaster />
+                  </ThemeGradientBackground>
+                </ThemeProvider>
+              </GoogleAuthProvider>
+            </QueryProvider>
+          </LoadingProvider>
+        </ErrorBoundary>
       </body>
     </html>
   )
