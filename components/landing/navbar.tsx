@@ -117,10 +117,10 @@ export function Navbar() {
               ) : (
                 <>
                   <Button asChild variant="ghost">
-                    <Link href="/login">Log in</Link>
+                    <Link href="/auth/login">Log in</Link>
                   </Button>
                   <Button asChild>
-                    <Link href="/signup">Sign up</Link>
+                    <Link href="/auth/signup">Sign up</Link>
                   </Button>
                 </>
               )}
