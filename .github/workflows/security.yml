@@ -1,0 +1,101 @@
+name: Security
+
+on:
+  schedule:
+    # Run security checks weekly
+    - cron: '0 2 * * 1'
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main, develop ]
+  workflow_dispatch:
+
+env:
+  NODE_VERSION: '20'
+  PNPM_VERSION: '8'
+
+jobs:
+  security-scan:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: ${{ env.NODE_VERSION }}
+        cache: 'npm'
+
+    - name: Setup pnpm
+      uses: pnpm/action-setup@v4
+      with:
+        version: ${{ env.PNPM_VERSION }}
+
+    - name: Get pnpm store directory
+      shell: bash
+      run: |
+        echo "STORE_DIR=$(pnpm store path --silent)" >> $GITHUB_ENV
+
+    - name: Setup pnpm cache
+      uses: actions/cache@v4
+      with:
+        path: ${{ env.STORE_DIR }}
+        key: ${{ runner.os }}-pnpm-store-${{ hashFiles('**/pnpm-lock.yaml') }}
+        restore-keys: |
+          ${{ runner.os }}-pnpm-store-
+
+    - name: Install dependencies
+      run: pnpm install --frozen-lockfile
+
+    # Dependency vulnerability scanning
+    - name: Run npm audit
+      run: npm audit --audit-level moderate
+      continue-on-error: true
+
+    # CodeQL security analysis
+    - name: Initialize CodeQL
+      uses: github/codeql-action/init@v3
+      with:
+        languages: javascript
+
+    - name: Autobuild
+      uses: github/codeql-action/autobuild@v3
+
+    - name: Perform CodeQL Analysis
+      uses: github/codeql-action/analyze@v3
+
+    # OWASP ZAP security testing (if you have a running application)
+    # - name: OWASP ZAP Scan
+    #   uses: zaproxy/action-full-scan@v0.8.0
+    #   with:
+    #     target: 'https://your-app-url.com'
+
+    # Container security scanning (if using Docker)
+    # - name: Run Trivy vulnerability scanner
+    #   uses: aquasecurity/trivy-action@master
+    #   with:
+    #     scan-type: 'fs'
+    #     scan-ref: '.'
+    #     format: 'sarif'
+    #     output: 'trivy-results.sarif'
+
+    # - name: Upload Trivy scan results to GitHub Security tab
+    #   uses: github/codeql-action/upload-sarif@v3
+    #   if: always()
+    #   with:
+    #     sarif_file: 'trivy-results.sarif'
+
+  dependency-review:
+    runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request'
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Dependency Review
+      uses: actions/dependency-review-action@v4
+      with:
+        fail-on-severity: moderate

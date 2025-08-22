@@ -1,0 +1,117 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Version to release (e.g., 1.0.0)'
+        required: true
+        type: string
+
+env:
+  NODE_VERSION: '20'
+  PNPM_VERSION: '8'
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push' || github.event_name == 'workflow_dispatch'
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: ${{ env.NODE_VERSION }}
+        cache: 'npm'
+
+    - name: Setup pnpm
+      uses: pnpm/action-setup@v4
+      with:
+        version: ${{ env.PNPM_VERSION }}
+
+    - name: Get pnpm store directory
+      shell: bash
+      run: |
+        echo "STORE_DIR=$(pnpm store path --silent)" >> $GITHUB_ENV
+
+    - name: Setup pnpm cache
+      uses: actions/cache@v4
+      with:
+        path: ${{ env.STORE_DIR }}
+        key: ${{ runner.os }}-pnpm-store-${{ hashFiles('**/pnpm-lock.yaml') }}
+        restore-keys: |
+          ${{ runner.os }}-pnpm-store-
+
+    - name: Install dependencies
+      run: pnpm install --frozen-lockfile
+
+    - name: Build application
+      run: pnpm build
+      env:
+        NODE_ENV: production
+
+    - name: Run tests
+      run: pnpm test
+
+    - name: Create Release
+      id: create_release
+      uses: actions/create-release@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        tag_name: ${{ github.ref_name || format('v{0}', inputs.version) }}
+        release_name: Release ${{ github.ref_name || format('v{0}', inputs.version) }}
+        body: |
+          ## What's Changed
+          
+          This release includes various improvements and bug fixes.
+          
+          ### Features
+          - Add new features here
+          
+          ### Bug Fixes
+          - Fix bugs here
+          
+          ### Breaking Changes
+          - List breaking changes here
+          
+          ## Installation
+          
+          ```bash
+          pnpm install
+          ```
+          
+          ## Build
+          
+          ```bash
+          pnpm build
+          ```
+        draft: false
+        prerelease: false
+
+    - name: Upload build artifacts
+      uses: actions/upload-release-asset@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        upload_url: ${{ steps.create_release.outputs.upload_url }}
+        asset_path: .next/
+        asset_name: build-${{ github.ref_name || inputs.version }}.zip
+        asset_content_type: application/zip
+
+    - name: Notify release status
+      if: always()
+      run: |
+        if [ "${{ job.status }}" == "success" ]; then
+          echo "✅ Release '${{ github.ref_name || inputs.version }}' created successfully!"
+        else
+          echo "❌ Release creation failed!"
+        fi
