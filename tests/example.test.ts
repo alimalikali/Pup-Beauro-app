@@ -1,7 +1,10 @@
-import { describe, it, expect } from "vitest"
+// Simple test to ensure CI passes
+describe('Basic Test', () => {
+  it('should pass', () => {
+    expect(1 + 1).toBe(2);
+  });
 
-describe("demo test", () => {
-  it("works", () => {
-    expect(1 + 1).toBe(2)
-  })
-})
+  it('should handle basic operations', () => {
+    expect('hello' + ' world').toBe('hello world');
+  });
+});

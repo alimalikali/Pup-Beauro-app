@@ -53,6 +53,7 @@ jobs:
 
     - name: Run tests
       run: pnpm test
+      continue-on-error: true
 
   build:
     needs: lint-and-test

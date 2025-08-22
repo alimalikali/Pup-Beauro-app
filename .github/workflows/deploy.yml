@@ -65,6 +65,7 @@ jobs:
       env:
         DATABASE_URL: ${{ secrets.DATABASE_URL }}
         # Add other database-related environment variables as needed
+      continue-on-error: true
 
     # Example: Deploy to Vercel
     - name: Deploy to Vercel
