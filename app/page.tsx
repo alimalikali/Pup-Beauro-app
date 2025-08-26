@@ -14,13 +14,11 @@ import { FaqAccordion } from "@/components/landing/faq-accordion"
 import { GlassmorphicCTA } from "@/components/landing/glassmorphic-cta"
 import { PricingPlans } from "@/components/landing/pricing-plans"
 import { EnhancedFooter } from "@/components/landing/enhanced-footer"
-import { NoSSR } from "@/components/no-ssr"
 
 export default function Home() {
   return (
     <main className="min-h-screen">
       <Navbar />
-      <NoSSR>
         <EmotiveHero />
         <PurposeManifesto />
         <HowItWorks />
@@ -35,7 +33,6 @@ export default function Home() {
         <GlassmorphicCTA />
         <PricingPlans />
         <EnhancedFooter />
-      </NoSSR>
     </main>
   )
 }
