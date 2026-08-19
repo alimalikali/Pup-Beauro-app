@@ -1,0 +1,160 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Mithaq design system — soft rose / pink palette, glassmorphism.
+   All colors defined as HSL tokens. */
+
+@layer base {
+  :root {
+    /* Mithaq palette */
+    --pink-hot: 345 87% 51%;        /* #f0134d */
+    --pink-rose: 351 95% 71%;       /* #fb7185 */
+    --pink-mid: 327 79% 81%;        /* #f9a8d4 */
+    --pink-soft: 351 96% 82%;       /* #fda4af */
+    --pink-blush: 354 100% 91%;     /* #fecdd3 */
+    --pink-bubble: 322 84% 89%;     /* #fbcfe8 */
+    --pink-light: 322 78% 95%;      /* #fce7f3 */
+    --pink-cream: 348 100% 97%;     /* #fff0f4 */
+
+    --text-dark: 343 47% 7%;        /* #1a0a10 */
+    --text-mid: 333 22% 34%;        /* #6b4455 */
+    --text-soft: 327 32% 64%;       /* #c084a0 */
+
+    --glass-white: 0 0% 100%;
+
+    /* shadcn semantic tokens, themed Mithaq */
+    --background: 348 100% 97%;
+    --foreground: 343 47% 7%;
+
+    --card: 0 0% 100%;
+    --card-foreground: 343 47% 7%;
+
+    --popover: 0 0% 100%;
+    --popover-foreground: 343 47% 7%;
+
+    --primary: 345 87% 51%;
+    --primary-foreground: 0 0% 100%;
+
+    --secondary: 322 78% 95%;
+    --secondary-foreground: 343 47% 7%;
+
+    --muted: 322 78% 95%;
+    --muted-foreground: 333 22% 34%;
+
+    --accent: 351 95% 71%;
+    --accent-foreground: 0 0% 100%;
+
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 0% 100%;
+
+    --border: 327 79% 88%;
+    --input: 327 79% 88%;
+    --ring: 345 87% 51%;
+
+    --radius: 1rem;
+
+    --sidebar-background: 0 0% 98%;
+    --sidebar-foreground: 240 5.3% 26.1%;
+    --sidebar-primary: 240 5.9% 10%;
+    --sidebar-primary-foreground: 0 0% 98%;
+    --sidebar-accent: 240 4.8% 95.9%;
+    --sidebar-accent-foreground: 240 5.9% 10%;
+    --sidebar-border: 220 13% 91%;
+    --sidebar-ring: 217.2 91.2% 59.8%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  html {
+    scroll-behavior: smooth;
+  }
+  body {
+    @apply bg-background text-foreground;
+    font-family: 'Inter', ui-sans-serif, system-ui, sans-serif;
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+    font-feature-settings: "ss01", "cv11";
+  }
+  .font-arabic {
+    font-family: 'Noto Naskh Arabic', 'Amiri', serif;
+  }
+  .font-display {
+    font-family: 'Fraunces', ui-serif, Georgia, serif;
+    font-optical-sizing: auto;
+    font-variation-settings: "opsz" 144, "SOFT" 50;
+    letter-spacing: -0.02em;
+  }
+  .font-display-italic {
+    font-family: 'Fraunces', ui-serif, Georgia, serif;
+    font-style: italic;
+    font-optical-sizing: auto;
+  }
+}
+
+@layer utilities {
+  .glass {
+    background: hsl(var(--glass-white) / 0.6);
+    backdrop-filter: blur(16px) saturate(180%);
+    -webkit-backdrop-filter: blur(16px) saturate(180%);
+    border: 1px solid hsl(var(--glass-white) / 0.7);
+  }
+  .glass-strong {
+    background: hsl(var(--glass-white) / 0.78);
+    backdrop-filter: blur(24px) saturate(180%);
+    -webkit-backdrop-filter: blur(24px) saturate(180%);
+    border: 1px solid hsl(var(--glass-white) / 0.8);
+  }
+  .text-gradient-pink {
+    background: linear-gradient(135deg, hsl(var(--pink-hot)) 0%, hsl(var(--pink-rose)) 50%, hsl(345 90% 60%) 100%);
+    background-size: 200% 200%;
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+    color: transparent;
+    animation: gradientShift 5s ease infinite;
+  }
+  .bg-gradient-pink {
+    background: linear-gradient(135deg, hsl(var(--pink-hot)), hsl(var(--pink-rose)));
+  }
+  .shadow-pink {
+    box-shadow: 0 10px 30px -8px hsl(var(--pink-hot) / 0.35);
+  }
+  .shadow-pink-lg {
+    box-shadow: 0 20px 60px -10px hsl(var(--pink-hot) / 0.45);
+  }
+  .mesh-orb {
+    position: absolute;
+    border-radius: 9999px;
+    filter: blur(8px);
+    pointer-events: none;
+  }
+}
+
+@keyframes gradientShift {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+@keyframes drift {
+  from { transform: translate(0, 0) scale(1); }
+  to   { transform: translate(60px, 40px) scale(1.15); }
+}
+@keyframes drift2 {
+  from { transform: translate(0, 0) scale(1); }
+  to   { transform: translate(-50px, -30px) scale(1.1); }
+}
+@keyframes drift3 {
+  from { transform: translate(0, 0) scale(1); }
+  to   { transform: translate(40px, -50px) scale(1.2); }
+}
+@keyframes pulse-soft {
+  0%, 100% { opacity: 0.6; transform: scale(1); }
+  50% { opacity: 1; transform: scale(1.15); }
+}
+@keyframes spin-slow {
+  to { transform: rotate(360deg); }
+}

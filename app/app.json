@@ -1,0 +1,33 @@
+{
+  "expo": {
+    "name": "Mithaq",
+    "slug": "mithaq",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "light",
+    "splash": {
+      "backgroundColor": "#fff5f7"
+    },
+    "ios": {
+      "supportsTablet": false,
+      "bundleIdentifier": "com.mithaq.app"
+    },
+    "android": {
+      "adaptiveIcon": {
+        "backgroundColor": "#fff5f7"
+      },
+      "package": "com.mithaq.app"
+    },
+    "plugins": [
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "Allow Mithaq to access your photos for identity verification."
+        }
+      ],
+      "expo-font",
+      "expo-secure-store"
+    ]
+  }
+}
