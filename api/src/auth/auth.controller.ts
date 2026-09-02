@@ -23,7 +23,6 @@ export class AuthController {
   @Get('me')
   @UseGuards(JwtGuard)
   me(@CurrentUser() user: User) {
-    const { password, ...safe } = user as any;
-    return safe;
+    return user;
   }
 }

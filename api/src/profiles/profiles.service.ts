@@ -1,6 +1,6 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository, Not } from 'typeorm';
+import { Repository } from 'typeorm';
 import { Profile } from './entities/profile.entity';
 import { EmbeddingService } from '../embedding/embedding.service';
 import { UpdateProfileDto, UpdatePurposeDto, UpdatePrioritiesDto } from './dto/update-profile.dto';
@@ -18,7 +18,7 @@ export class ProfilesService {
   }
 
   async findByUserId(userId: string) {
-    const profile = await this.repo.findOne({ where: { userId } });
+    const profile = await this.repo.findOne({ where: { userId }, relations: ['user'] });
     if (!profile) throw new NotFoundException('Profile not found');
     return profile;
   }
@@ -56,18 +56,36 @@ export class ProfilesService {
     return this.repo.save(profile);
   }
 
-  async getFeed(userId: string, limit = 10): Promise<{ profile: Profile; score: number }[]> {
+  async getFeed(
+    userId: string,
+    limit = 10,
+    excludeExistingMatches = true,
+  ): Promise<{ profile: Profile; score: number }[]> {
     const myProfile = await this.findByUserId(userId);
 
-    const candidates = await this.repo.find({
-      where: { isPublished: true, userId: Not(userId) },
-      relations: ['user'],
-      take: 50,
-    });
+    const query = this.repo.createQueryBuilder('profile')
+      .innerJoinAndSelect('profile.user', 'user')
+      .where('profile.isPublished = true')
+      .andWhere('profile.userId != :userId', { userId })
+      .andWhere('user.isActive = true')
+      .andWhere('(user.gender IS NULL OR user.gender != :gender)', { gender: myProfile.user?.gender })
+      .andWhere(`NOT EXISTS (
+        SELECT 1 FROM blocks block
+        WHERE (block."userId" = :userId AND block."blockedUserId" = profile."userId")
+           OR (block."userId" = profile."userId" AND block."blockedUserId" = :userId)
+      )`, { userId });
 
-    const myVec = myProfile.purposeEmbeddingRaw
-      ? (JSON.parse(myProfile.purposeEmbeddingRaw) as number[])
-      : null;
+    if (excludeExistingMatches) {
+      query.andWhere(`NOT EXISTS (
+        SELECT 1 FROM matches existing_match
+        WHERE (existing_match."userAId" = :userId AND existing_match."userBId" = profile."userId")
+           OR (existing_match."userBId" = :userId AND existing_match."userAId" = profile."userId")
+      )`, { userId });
+    }
+
+    const candidates = await query.take(100).getMany();
+
+    const myVec = this.parseEmbedding(myProfile.purposeEmbeddingRaw);
 
     return candidates
       .map((p) => ({ profile: p, score: this.computeScore(p, myProfile, myVec) }))
@@ -78,13 +96,25 @@ export class ProfilesService {
   private computeScore(candidate: Profile, me: Profile, myVec: number[] | null): number {
     let baseScore = 0.5;
 
-    if (myVec && candidate.purposeEmbeddingRaw) {
-      const theirVec = JSON.parse(candidate.purposeEmbeddingRaw) as number[];
+    const theirVec = this.parseEmbedding(candidate.purposeEmbeddingRaw);
+    if (myVec && theirVec && myVec.length === theirVec.length) {
       baseScore = this.cosineSimilarity(myVec, theirVec);
     }
 
     const priorityMatch = this.priorityScore(candidate, me);
     return Math.round((baseScore * 0.6 + priorityMatch * 0.4) * 100);
+  }
+
+  private parseEmbedding(value: string | null): number[] | null {
+    if (!value) return null;
+    try {
+      const parsed: unknown = JSON.parse(value);
+      return Array.isArray(parsed) && parsed.every((item) => typeof item === 'number')
+        ? parsed
+        : null;
+    } catch {
+      return null;
+    }
   }
 
   private cosineSimilarity(a: number[], b: number[]): number {

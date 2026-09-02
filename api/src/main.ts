@@ -1,7 +1,7 @@
+import 'dotenv/config';
 import { NestFactory, Reflector } from '@nestjs/core';
 import { ValidationPipe, ClassSerializerInterceptor } from '@nestjs/common';
 import { AppModule } from './app.module';
-import { join } from 'path';
 import { NestExpressApplication } from '@nestjs/platform-express';
 
 async function bootstrap() {
@@ -21,7 +21,6 @@ async function bootstrap() {
     : true;
   app.enableCors({ origin: origins, credentials: true });
 
-  app.useStaticAssets(join(__dirname, '..', 'uploads'), { prefix: '/uploads' });
   app.setGlobalPrefix('api');
 
   const port = process.env.PORT || 5000;

@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Param, Post, Put, UseGuards } from '@nestjs/common';
+import { Controller, Get, Param, Post, Put, UseGuards, ParseUUIDPipe } from '@nestjs/common';
 import { JwtGuard } from '../auth/guards/jwt.guard';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
 import { User } from '../users/entities/user.entity';
@@ -17,10 +17,9 @@ export class MatchingController {
   @Post('interest/:userId')
   expressInterest(
     @CurrentUser() user: User,
-    @Param('userId') toUserId: string,
-    @Body() body: { score?: number },
+    @Param('userId', ParseUUIDPipe) toUserId: string,
   ) {
-    return this.matching.expressInterest(user.id, toUserId, body.score ?? 0);
+    return this.matching.expressInterest(user.id, toUserId);
   }
 
   @Get('mutual')
@@ -28,8 +27,8 @@ export class MatchingController {
     return this.matching.getMutualMatches(user.id);
   }
 
-  @Put(':matchId/skip')
-  skip(@CurrentUser() user: User, @Param('matchId') targetId: string) {
+  @Put('skip/:userId')
+  skip(@CurrentUser() user: User, @Param('userId', ParseUUIDPipe) targetId: string) {
     return this.matching.skipMatch(user.id, targetId);
   }
 }

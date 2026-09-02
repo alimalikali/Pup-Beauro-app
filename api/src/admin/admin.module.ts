@@ -8,12 +8,14 @@ import { AdminController } from './admin.controller';
 import { SeedService } from './seed.service';
 import { UsersModule } from '../users/users.module';
 import { VerificationModule } from '../verification/verification.module';
+import { SafetyModule } from '../safety/safety.module';
 
 @Module({
   imports: [
     TypeOrmModule.forFeature([Match, User, Profile]),
     UsersModule,
     VerificationModule,
+    SafetyModule,
   ],
   providers: [AdminService, SeedService],
   controllers: [AdminController],

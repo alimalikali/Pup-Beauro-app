@@ -5,6 +5,8 @@ import { VerificationStatus } from '../verification/entities/verification-doc.en
 import { InjectRepository } from '@nestjs/typeorm';
 import { Match, MatchStatus } from '../matching/entities/match.entity';
 import { Repository } from 'typeorm';
+import { SafetyService } from '../safety/safety.service';
+import { ReportStatus } from '../safety/entities/report.entity';
 
 @Injectable()
 export class AdminService {
@@ -12,6 +14,7 @@ export class AdminService {
     private users: UsersService,
     private verification: VerificationService,
     @InjectRepository(Match) private matchRepo: Repository<Match>,
+    private safety: SafetyService,
   ) {}
 
   async getStats() {
@@ -45,5 +48,22 @@ export class AdminService {
 
   unsuspendUser(userId: string) {
     return this.users.update(userId, { isActive: true });
+  }
+
+  getReports() {
+    return this.safety.listReports();
+  }
+
+  reviewReport(
+    reportId: string,
+    adminId: string,
+    status: ReportStatus,
+    note?: string,
+  ) {
+    return this.safety.reviewReport(reportId, adminId, status, note);
+  }
+
+  getVerificationFile(documentId: string, side: string) {
+    return this.verification.getPrivateFile(documentId, side);
   }
 }

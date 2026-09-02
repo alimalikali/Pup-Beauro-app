@@ -17,13 +17,19 @@ export class MatchingService {
     return this.profiles.getFeed(userId);
   }
 
-  async expressInterest(fromUserId: string, toUserId: string, score: number) {
+  async expressInterest(fromUserId: string, toUserId: string) {
     if (fromUserId === toUserId) throw new BadRequestException('Cannot match with yourself');
 
     const [a, b] = [fromUserId, toUserId].sort();
     let match = await this.repo.findOne({ where: { userAId: a, userBId: b } });
 
+    const candidate = (await this.profiles.getFeed(fromUserId, 100, false)).find(
+      (item) => item.profile.userId === toUserId,
+    );
+    if (!candidate) throw new BadRequestException('Profile is not available for matching');
+
     if (match) {
+      if (match.status === MatchStatus.REJECTED) throw new BadRequestException('This introduction is closed');
       if (match.initiatedBy !== fromUserId) {
         match.status = MatchStatus.MUTUAL;
         await this.repo.save(match);
@@ -36,7 +42,7 @@ export class MatchingService {
     match = this.repo.create({
       userAId: a, userBId: b,
       status: MatchStatus.PENDING,
-      compatScore: score,
+      compatScore: candidate.score,
       initiatedBy: fromUserId,
     });
 

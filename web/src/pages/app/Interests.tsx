@@ -1,0 +1,4 @@
+import { useQuery } from "@tanstack/react-query";
+import { HeartHandshake } from "lucide-react";
+import { matchApi } from "@/lib/api";
+export default function Interests(){const matches=useQuery({queryKey:["matches","mutual"],queryFn:matchApi.mutual}); return <div><p className="text-sm font-bold uppercase tracking-[.2em] text-mithaq-hot">Connections</p><h1 className="mt-2 font-display text-4xl font-bold">Mutual interests</h1><div className="glass mt-8 rounded-3xl p-10 text-center"><HeartHandshake className="mx-auto h-12 w-12 text-mithaq-hot"/><h2 className="mt-4 font-display text-2xl font-bold">{Array.isArray(matches.data)&&matches.data.length?`${matches.data.length} mutual connection${matches.data.length===1?"":"s"}`:"No mutual interests yet"}</h2><p className="mt-2 text-mithaq-mid2">When interest is mutual, a purposeful conversation will become available here.</p></div></div>}
