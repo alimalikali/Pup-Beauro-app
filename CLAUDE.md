@@ -6,16 +6,15 @@
 
 | Dir | Stack | Package manager | Detailed rules |
 |-----|-------|----------------|----------------|
-| `api/` | NestJS 10, TypeORM, PostgreSQL + pgvector, Socket.io | **pnpm** | `api/CLAUDE.md` |
-| `app/` | Expo SDK 54, React Native 0.81, Redux Toolkit, React Navigation | **pnpm** | `app/CLAUDE.md` |
-| `admin/` | Vite 5, React 18, Tailwind, shadcn/ui, vanilla Three.js | **npm** | `admin/CLAUDE.md` |
+| `api/` | NestJS 11, TypeORM, PostgreSQL, Socket.io | **pnpm** | `api/CLAUDE.md` |
+| `web/` | Vite 5, React 18, Tailwind, shadcn/ui, vanilla Three.js | **npm** | `web/CLAUDE.md` |
 
 Sub-project CLAUDE.md files auto-load when work touches that sub-project's files. Detailed conventions, gotchas, and module/screen/component listings live there — keep this root file slim.
 
 ## Monorepo-level rules
 
 - **No cross-imports between sub-projects.** They are independent deployables.
-- **Don't switch package managers** — pnpm for api/app, npm for admin. Lockfiles must stay consistent.
+- **Don't switch package managers** — pnpm for api/web, npm for admin. Lockfiles must stay consistent.
 - **No shared types package today** — API DTOs are duplicated in `app/src/types/` and admin TanStack hooks. Sync manually when contracts change (use `sync-api-contract` skill).
 - **Always run commands from the right cwd**: `cd api && pnpm ...` etc. Slash commands `/api-dev`, `/app-dev`, `/admin-dev` handle this.
 - **Secrets**: each sub-project has its own `.env`. Never commit. Hook denies reading any `.env*` file.
@@ -27,19 +26,19 @@ Sub-project CLAUDE.md files auto-load when work touches that sub-project's files
 cd api && pnpm install && pnpm start:dev    # http://localhost:5000/api
 
 # app/
-cd app && nvm use 20 && pnpm install && pnpm start
+cd web && npm install && npm run dev
 
 # admin/
-cd admin && npm install && npm run dev      # http://localhost:8080
+cd web && npm install && npm run dev      # http://localhost:8080
 ```
 
-Or use slash commands: `/api-dev`, `/app-dev` (Node-20 check), `/admin-dev`, `/api-lint`, `/full-check`.
+Or use slash commands: `/api-dev`, `/admin-dev`, `/api-lint`, `/full-check`.
 
 ## Top-level environmental traps
 
 These have all broken something. Re-verify when touching infrastructure:
 
-- **Node 20.x** required for `app/`. Node 24 breaks Expo SDK 54 ESM resolution. (Hook warns on SessionStart inside `app/`.)
+- **Node 20.x** required for `web/`. Node 24 breaks Expo SDK 54 ESM resolution. (Hook warns on SessionStart inside `web/`.)
 - **pgvector** Postgres extension required for `api/` schema, even though current matching is in-memory cosine.
 - `app/.npmrc` `node-linker=hoisted`, `expo-blur` excluded from plugins, `AppEntry.js` as `main` — see `app/CLAUDE.md` for the full list.
 
@@ -47,8 +46,7 @@ These have all broken something. Re-verify when touching infrastructure:
 
 Defined in `.claude/agents/`:
 - `backend-agent` — owns api/
-- `mobile-agent` — owns app/
-- `admin-agent` — owns admin/
+- `admin-agent` — owns web/
 - `contract-sync-agent` — mirrors API/socket changes across sub-projects
 - `pr-reviewer` — read-only diff review against project rules
 
@@ -60,7 +58,7 @@ Per-sub-project skills under `.claude/skills/{backend,mobile,admin,shared}/`. Ea
 
 - `PreToolUse` Bash → blocks `rm -rf /`, `rm -rf ~`, fork bombs (`.claude/hooks/block-dangerous-rm.sh`)
 - `PostToolUse` Edit/Write → best-effort lint/format per sub-project (`.claude/hooks/post-edit-format.sh`)
-- `SessionStart` → warns if cwd is inside `app/` and Node ≠ 20.x (`.claude/hooks/check-node-version.sh`)
+- `SessionStart` → warns if cwd is inside `web/` and Node ≠ 20.x (`.claude/hooks/check-node-version.sh`)
 
 ## Date context
 

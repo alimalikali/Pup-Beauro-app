@@ -4,7 +4,7 @@ Auto-loaded when work touches `api/`. Backend-specific patterns and gotchas live
 
 ## Stack
 
-NestJS 10, TypeORM 0.3, PostgreSQL + pgvector, Socket.io 4.7, Passport JWT, class-validator, Multer, Google Gemini (`text-embedding-004`). Package manager: **pnpm**.
+NestJS 11, TypeORM 0.3, PostgreSQL, Socket.io, Passport JWT, class-validator, Multer, Google Gemini (`text-embedding-004`). Package manager: **pnpm**.
 
 ## Commands
 
@@ -111,7 +111,7 @@ Pattern from `verification.controller.ts`:
 
 ## DB
 
-- `synchronize: true` in dev (auto-migrates schema). Off in prod — no migrations dir today, generate manually for prod schema changes.
+- `synchronize` is disabled by default. Run checked-in migrations for every environment; `DB_SYNCHRONIZE=true` is only for disposable experiments.
 - Always load relations explicitly: `repo.find({ where, relations: ['profile'] })`. No `eager: true` on entities (hides N+1).
 - pgvector extension required by schema even though current matching is in-memory.
 

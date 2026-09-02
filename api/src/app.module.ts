@@ -1,5 +1,4 @@
 import { Module } from '@nestjs/common';
-import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { AuthModule } from './auth/auth.module';
 import { UsersModule } from './users/users.module';
@@ -10,24 +9,24 @@ import { VerificationModule } from './verification/verification.module';
 import { EmbeddingModule } from './embedding/embedding.module';
 import { AdminModule } from './admin/admin.module';
 import { HealthModule } from './health/health.module';
+import { SafetyModule } from './safety/safety.module';
+
+if (!process.env.JWT_SECRET || process.env.JWT_SECRET.length < 32) {
+  throw new Error('JWT_SECRET must be configured with at least 32 characters');
+}
 
 @Module({
   imports: [
-    ConfigModule.forRoot({ isGlobal: true }),
-    TypeOrmModule.forRootAsync({
-      imports: [ConfigModule],
-      inject: [ConfigService],
-      useFactory: (config: ConfigService) => ({
-        type: 'postgres',
-        host: config.get('DB_HOST', 'localhost'),
-        port: config.get<number>('DB_PORT', 5432),
-        database: config.get('DB_NAME', 'mithaq'),
-        username: config.get('DB_USER', 'postgres'),
-        password: config.get('DB_PASS', ''),
-        entities: [__dirname + '/**/*.entity{.ts,.js}'],
-        synchronize: config.get('NODE_ENV') !== 'production',
-        logging: false,
-      }),
+    TypeOrmModule.forRoot({
+      type: 'postgres',
+      host: process.env.DB_HOST || 'localhost',
+      port: Number(process.env.DB_PORT || 5432),
+      database: process.env.DB_NAME || 'mithaq',
+      username: process.env.DB_USER || 'postgres',
+      password: process.env.DB_PASS || '',
+      entities: [__dirname + '/**/*.entity{.ts,.js}'],
+      synchronize: process.env.DB_SYNCHRONIZE === 'true',
+      logging: false,
     }),
     AuthModule,
     UsersModule,
@@ -38,6 +37,7 @@ import { HealthModule } from './health/health.module';
     EmbeddingModule,
     AdminModule,
     HealthModule,
+    SafetyModule,
   ],
 })
 export class AppModule {}

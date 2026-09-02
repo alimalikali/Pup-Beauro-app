@@ -77,6 +77,18 @@ export class Profile {
   @Column({ nullable: true })
   avatarUrl: string;
 
+  @Column({ type: 'jsonb', default: {} })
+  partnerPreferences: Record<string, unknown>;
+
+  @Column({ type: 'jsonb', default: {} })
+  valuesAndBeliefs: Record<string, unknown>;
+
+  @Column({ type: 'jsonb', default: {} })
+  lifestylePreferences: Record<string, unknown>;
+
+  @Column({ type: 'jsonb', default: {} })
+  longTermGoals: Record<string, unknown>;
+
   @CreateDateColumn()
   createdAt: Date;
 

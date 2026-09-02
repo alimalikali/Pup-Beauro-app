@@ -1,10 +1,11 @@
 import {
   Controller, Post, Get, UseGuards, UseInterceptors,
-  UploadedFiles, Req,
+  UploadedFiles,
 } from '@nestjs/common';
 import { FileFieldsInterceptor } from '@nestjs/platform-express';
 import { diskStorage } from 'multer';
-import { extname, join } from 'path';
+import { extname } from 'path';
+import { randomUUID } from 'crypto';
 import { JwtGuard } from '../auth/guards/jwt.guard';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
 import { User } from '../users/entities/user.entity';
@@ -22,10 +23,10 @@ export class VerificationController {
       {
         storage: diskStorage({
           destination: './uploads/cnic',
-          filename: (_req, file, cb) =>
-            cb(null, `${Date.now()}${extname(file.originalname)}`),
+          filename: (_req, file, cb) => cb(null, `${randomUUID()}${extname(file.originalname).toLowerCase()}`),
         }),
         limits: { fileSize: 5 * 1024 * 1024 },
+        fileFilter: (_req, file, cb) => cb(null, ['image/jpeg', 'image/png', 'application/pdf'].includes(file.mimetype)),
       },
     ),
   )

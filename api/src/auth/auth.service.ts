@@ -15,12 +15,13 @@ export class AuthService {
   ) {}
 
   async register(dto: RegisterDto) {
-    const existing = await this.users.findByEmail(dto.email);
+    const email = dto.email.trim().toLowerCase();
+    const existing = await this.users.findByEmail(email);
     if (existing) throw new ConflictException('Email already registered');
 
     const hashed = await bcrypt.hash(dto.password, 12);
     const user = await this.users.create({
-      email: dto.email,
+      email,
       phone: dto.phone,
       password: hashed,
       gender: dto.gender,
@@ -36,7 +37,7 @@ export class AuthService {
   }
 
   async login(dto: LoginDto) {
-    const user = await this.users.findByEmail(dto.email);
+    const user = await this.users.findByEmail(dto.email.trim().toLowerCase());
     if (!user) throw new UnauthorizedException('Invalid credentials');
 
     const valid = await bcrypt.compare(dto.password, user.password);

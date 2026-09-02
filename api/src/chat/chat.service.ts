@@ -64,6 +64,7 @@ export class ChatService {
   }
 
   async markRead(conversationId: string, userId: string) {
+    await this.getMessages(conversationId, userId);
     await this.msgRepo.update(
       { conversationId, isRead: false },
       { isRead: true },
